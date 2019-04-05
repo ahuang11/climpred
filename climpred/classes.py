@@ -172,10 +172,15 @@ class ReferenceEnsemble(PredictionEnsemble):
         super().__init__(xobj)
         self.reference = {}
 
-    def add_reference(self, xobj, name=None):
+    def add_reference(self, xobj, name):
         """
         uninitialized things should all have 'initialization' dimension,
         so can stack them here.
+        
+        Args:
+            xobj (xarray object): Dataset/DataArray being appended to the
+                                  `ReferenceEnsemble` object.
+            name (str): Name of this object (e.g., "reconstruction")
         """
         _check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):

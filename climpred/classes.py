@@ -7,6 +7,11 @@ from .bootstrap import bootstrap_perfect_model
 # TODO: add relative entropy functionality
 # TODO: add various `get` and `set` decorators
 # TODO: refactor other modules, e.g. move all metrics to `metrics.py`
+# TODO: add checks for our package naming conventions. I.e., should
+# have 'member', 'initialization', etc.
+# TODO: make sure that comparison 'm2r' works for reference ensemble.
+# TODO: add ability to declare single variable from a multi-variable
+# object.
 
 
 # --------------
@@ -176,7 +181,7 @@ class ReferenceEnsemble(PredictionEnsemble):
         """
         uninitialized things should all have 'initialization' dimension,
         so can stack them here.
-        
+
         Args:
             xobj (xarray object): Dataset/DataArray being appended to the
                                   `ReferenceEnsemble` object.
@@ -187,12 +192,19 @@ class ReferenceEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         # TODO: Should just check that at least *one* variable matches.
         # In a case where you have SST references for some products, etc.
+        #
+        # TODO: Make sure everything is the same length. Can add keyword
+        # to autotrim to the common timeframe?
         _check_reference_dimensions(self.initialized, xobj)
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.reference[name] = xobj
 
     def compute_skill(self, refname=None, metric='pearson_r', comparison='e2r',
                       nlags=None, return_p=False):
+        """
+        Add docstring here.
+        """
+        # TODO: Check that p-value return is easy on the user.
         if len(self.reference) == 0:
             raise ValueError("""You need to add a reference dataset before
                 attempting to compute predictability.""")

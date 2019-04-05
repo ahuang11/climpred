@@ -1,6 +1,7 @@
 import xarray as xr
 from .prediction import (compute_reference, compute_persistence,
-                         compute_perfect_model, bootstrap_perfect_model)
+                         compute_perfect_model)
+from .bootstrap import bootstrap_perfect_model
 # TODO: add horizon functionality
 # TODO: add perfect model functionality
 # TODO: add relative entropy functionality

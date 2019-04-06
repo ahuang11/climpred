@@ -6,12 +6,12 @@ from .bootstrap import bootstrap_perfect_model
 # TODO: add perfect model functionality
 # TODO: add relative entropy functionality
 # TODO: add various `get` and `set` decorators
-# TODO: refactor other modules, e.g. move all metrics to `metrics.py`
 # TODO: add checks for our package naming conventions. I.e., should
 # have 'member', 'initialization', etc.
 # TODO: make sure that comparison 'm2r' works for reference ensemble.
-# TODO: add ability to declare single variable from a multi-variable
-# object.
+# TODO: allow user to only compute things for one variable. I.e., if the
+# PredictionEnsemble has multiple variables, maybe you only want to compute
+# for one.
 
 
 # --------------
@@ -42,10 +42,6 @@ def _check_reference_dimensions(init, ref):
             prediction ensemble dimensions (excluding `time`.)""")
 
 
-# TODO: Don't force same variables for every reference. Allow for some
-# references to only have a subset of the initialized prediction variables.
-# This means skill, etc. will be computed for whatever variables
-# are available.
 def _check_reference_vars_match_initialized(init, ref):
     """
     Checks that a new reference (or control) dataset has at least one variable
@@ -73,6 +69,14 @@ def _check_xarray(xobj):
 # Aesthetics
 # ----------
 def _display_metadata(self):
+    """
+    This is called in the following case:
+
+    ```
+    dp = cp.ReferenceEnsemble(dple)
+    print(dp)
+    ```
+    """
     header = f'<climpred.{type(self).__name__}>'
     summary = header + '\nInitialized Ensemble:\n'
     summary += '    ' + str(self.initialized.data_vars)[18:].strip()
@@ -107,6 +111,11 @@ def _display_metadata(self):
 # CLASS DEFINITIONS
 # -----------------
 class PredictionEnsemble:
+    """
+    The main object. This is the super of both `PerfectModelEnsemble` and
+    `ReferenceEnsemble`. This cannot be called directly by a user, but
+    should house functions that both ensemble types can use.
+    """
     def __init__(self, xobj):
         _check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
@@ -218,6 +227,15 @@ class ReferenceEnsemble(PredictionEnsemble):
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.reference[name] = xobj
 
+    def add_uninitialized(self, xobj):
+        """
+        This will be a special case for a complimentary uninitialized
+        simulation, like LENS for DPLE.
+
+        There should be complimentary functions for uninitialized skill.
+        """
+        pass
+
     def compute_skill(self, refname=None, metric='pearson_r', comparison='e2r',
                       nlags=None, return_p=False):
         """
@@ -260,7 +278,6 @@ class ReferenceEnsemble(PredictionEnsemble):
 
     def compute_persistence(self, refname=None, nlags=None,
                             metric='pearson_r'):
-        # TODO: Make this into a _ function
         if len(self.reference) == 0:
             raise ValueError("""You need to add a reference dataset before
             attempting to compute persistence forecasts.""")

@@ -12,6 +12,11 @@ from .bootstrap import bootstrap_perfect_model
 # TODO: allow user to only compute things for one variable. I.e., if the
 # PredictionEnsemble has multiple variables, maybe you only want to compute
 # for one.
+# TODO: For attributes, don't want them spit out for every `print(dp)` call.
+# Maybe have a decorator under PredictionEnsemble that is .get_attr()
+# TODO: Add attributes to the PredictionEnsemble that will change behavior
+# for some functions. E.g.:
+# temporal_resolution = 'annual'
 
 
 # --------------

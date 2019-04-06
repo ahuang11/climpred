@@ -48,17 +48,20 @@ def _check_reference_dimensions(init, ref):
 # are available.
 def _check_reference_vars_match_initialized(init, ref):
     """
-    Checks that a new reference (or control) dataset has identical variables
-    to the initialized dataset. This ensures that they can be compared
-    pairwise.
+    Checks that a new reference (or control) dataset has at least one variable
+    in common with the initialized dataset. This ensures that they can be
+    compared pairwise.
+
     ref: new addition
     init: dp.initialized
     """
     init_list = [var for var in init.data_vars]
     ref_list = [var for var in ref.data_vars]
-    if set(init_list) != set(ref_list):
-        raise ValueError("""Please provide a dataset with matching variables
-        (and variable names) to the initialied prediction ensemble.""")
+    # https://stackoverflow.com/questions/10668282/
+    # one-liner-to-check-if-at-least-one-item-in-list-exists-in-another-list
+    if set(init_list).isdisjoint(ref_list):
+        raise ValueError("""Please provide a Dataset/DataArray with at least
+        one matching variable to the initialized prediction ensemble.""")
 
 
 def _check_xarray(xobj):
@@ -177,6 +180,25 @@ class ReferenceEnsemble(PredictionEnsemble):
         super().__init__(xobj)
         self.reference = {}
 
+    def _trim_to_reference(self, ref):
+        """
+        Temporarily reduce initialized ensemble to the variables
+        it shares with the given reference. I.e., if the reference
+        has ['SST'] and the initialized ensemble has ['SST', 'SALT'],
+        this will drop 'SALT' so that the computation can be made.
+
+        ref: str for reference name.
+        """
+        init_vars = [var for var in self.initialized.data_vars]
+        ref_vars = [var for var in self.reference[ref].data_vars]
+        # find what variable they have in common.
+        intersect = set(ref_vars).intersection(init_vars)
+        # perhaps could be done cleaner than this.
+        for var in intersect:
+            idx = init_vars.index(var)
+            init_vars.pop(idx)
+        return init_vars
+
     def add_reference(self, xobj, name):
         """
         uninitialized things should all have 'initialization' dimension,
@@ -190,9 +212,6 @@ class ReferenceEnsemble(PredictionEnsemble):
         _check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        # TODO: Should just check that at least *one* variable matches.
-        # In a case where you have SST references for some products, etc.
-        #
         # TODO: Make sure everything is the same length. Can add keyword
         # to autotrim to the common timeframe?
         _check_reference_dimensions(self.initialized, xobj)
@@ -209,7 +228,8 @@ class ReferenceEnsemble(PredictionEnsemble):
             raise ValueError("""You need to add a reference dataset before
                 attempting to compute predictability.""")
         if refname is not None:
-            return compute_reference(self.initialized,
+            drop_vars = self._trim_to_reference(refname)
+            return compute_reference(self.initialized.drop(drop_vars),
                                      self.reference[refname],
                                      metric=metric,
                                      comparison=comparison,
@@ -218,7 +238,8 @@ class ReferenceEnsemble(PredictionEnsemble):
         else:
             if len(self.reference) == 1:
                 refname = list(self.reference.keys())[0]
-                return compute_reference(self.initialized,
+                drop_vars = self._trim_to_reference(refname)
+                return compute_reference(self.initialized.drop(drop_vars),
                                          self.reference[refname],
                                          metric=metric,
                                          comparison=comparison,
@@ -227,7 +248,8 @@ class ReferenceEnsemble(PredictionEnsemble):
             else:
                 skill = {}
                 for key in self.reference:
-                    skill[key] = compute_reference(self.initialized,
+                    drop_vars = self._trim_to_reference(key)
+                    skill[key] = compute_reference(self.initialized.drop(drop_vars),
                                                    self.reference[key],
                                                    metric=metric,
                                                    comparison=comparison,

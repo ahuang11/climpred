@@ -249,7 +249,8 @@ class ReferenceEnsemble(PredictionEnsemble):
                 skill = {}
                 for key in self.reference:
                     drop_vars = self._trim_to_reference(key)
-                    skill[key] = compute_reference(self.initialized.drop(drop_vars),
+                    skill[key] = compute_reference(self.initialized
+                                                       .drop(drop_vars),
                                                    self.reference[key],
                                                    metric=metric,
                                                    comparison=comparison,

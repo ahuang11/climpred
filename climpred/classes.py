@@ -1,13 +1,13 @@
 import xarray as xr
 from .prediction import (compute_reference, compute_persistence,
-                         compute_perfect_model)
+                         compute_perfect_model, compute_persistence_pm)
 from .bootstrap import bootstrap_perfect_model
 # TODO: add horizon functionality
-# TODO: add perfect model functionality
 # TODO: add relative entropy functionality
 # TODO: add various `get` and `set` decorators
 # TODO: add checks for our package naming conventions. I.e., should
-# have 'member', 'initialization', etc.
+# have 'member', 'initialization', etc. Can do this after updating the
+# terminology.
 # TODO: make sure that comparison 'm2r' works for reference ensemble.
 # TODO: allow user to only compute things for one variable. I.e., if the
 # PredictionEnsemble has multiple variables, maybe you only want to compute
@@ -193,9 +193,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             attempting to compute a persistence forecast.""")
         if nlags is None:
             nlags = self.initialized.time.size
-        return compute_persistence(self.control,
-                                   nlags=nlags,
-                                   metric=metric)
+        return compute_persistence_pm(self.initialized,
+                                      self.control,
+                                      nlags=nlags,
+                                      metric=metric)
 
     def bootstrap(self, metric='rmse', comparison='m2m', reference_period='MK',
                   sig=95, bootstrap=30):

@@ -20,6 +20,8 @@ from .bootstrap import bootstrap_perfect_model
 # TODO: Add attributes to returned objects. E.g., 'skill' should come back
 # with attribute explaining what two things were compared.
 # TODO: Create custom errors (not just ValueError for all of this)
+# TODO: Add ensemble capabilities for uninitialized, initialized for
+# reference ensemble.
 
 
 # --------------
@@ -119,6 +121,12 @@ def _display_metadata(self):
         else:
             summary += '\nReferences:\n'
             summary += '    None'
+        if any(self.uninitialized):
+            summary += '\nUninitialized:\n'
+            summary += '    ' + str(self.uninitialized.data_vars)[18:].strip()
+        else:
+            summary += '\nUninitialized:\n'
+            summary += '    None'
     elif isinstance(self, PerfectModelEnsemble):
         summary += '\nControl:\n'
         # TODO: convert to decorator
@@ -215,6 +223,7 @@ class ReferenceEnsemble(PredictionEnsemble):
     def __init__(self, xobj):
         super().__init__(xobj)
         self.reference = {}
+        self.uninitialized = {}
 
     def _trim_to_reference(self, ref):
         """
@@ -261,7 +270,12 @@ class ReferenceEnsemble(PredictionEnsemble):
 
         There should be complimentary functions for uninitialized skill.
         """
-        pass
+        _check_xarray(xobj)
+        if isinstance(xobj, xr.DataArray):
+            xobj = xobj.to_dataset()
+        _check_reference_dimensions(self.initialized, xobj)
+        _check_reference_vars_match_initialized(self.initialized, xobj)
+        self.uninitialized = xobj
 
     def compute_skill(self, refname=None, metric='pearson_r', comparison='e2r',
                       nlags=None, return_p=False):

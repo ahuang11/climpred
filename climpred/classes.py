@@ -17,6 +17,8 @@ from .bootstrap import bootstrap_perfect_model
 # TODO: Add attributes to the PredictionEnsemble that will change behavior
 # for some functions. E.g.:
 # temporal_resolution = 'annual'
+# TODO: Add attributes to returned objects. E.g., 'skill' should come back
+# with attribute explaining what two things were compared.
 
 
 # --------------
@@ -299,3 +301,9 @@ class ReferenceEnsemble(PredictionEnsemble):
                                                        nlags=nlags,
                                                        metric=metric)
         return persistence
+
+    def compute_horizon(self, refname=None,):
+        """
+        Method to compute the predictability horizon.
+        """
+        pass

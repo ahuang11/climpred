@@ -19,6 +19,7 @@ from .bootstrap import bootstrap_perfect_model
 # temporal_resolution = 'annual'
 # TODO: Add attributes to returned objects. E.g., 'skill' should come back
 # with attribute explaining what two things were compared.
+# TODO: Create custom errors (not just ValueError for all of this)
 
 
 # --------------
@@ -38,7 +39,7 @@ def _check_prediction_ensemble_dimensions(xobj):
 
 def _check_reference_dimensions(init, ref):
     """Checks that the reference matches all initialized dimensions except
-    for 'time'"""
+    for 'time' and 'member'"""
     init_dims = list(init.dims)
     if 'time' in init_dims:
         init_dims.remove('time')
@@ -46,7 +47,25 @@ def _check_reference_dimensions(init, ref):
         init_dims.remove('member')
     if not (set(ref.dims) == set(init_dims)):
         raise ValueError("""Reference dimensions must match initialized
-            prediction ensemble dimensions (excluding `time`.)""")
+            prediction ensemble dimensions (excluding `time` and `member`.)""")
+
+
+def _check_control_dimensions(init, control):
+    """Checks that the control matches all initialized prediction ensemble
+    dimensions except for `initialization` and `member`.
+
+    NOTE: This needs to be merged with `_check_reference_dimensions` following
+    refactoring. The dimension language is confusing, since control expects
+    'time' and reference expects 'initialization'."""
+    init_dims = list(init.dims)
+    if 'initialization' in init_dims:
+        init_dims.remove('initialization')
+    if 'member' in init_dims:
+        init_dims.remove('member')
+    if not (set(control.dims) == set(init_dims)):
+        raise ValueError("""Control dimensions must match initialized
+            prediction ensemble dimensions (excluding `initialization` and
+            `member`.)""")
 
 
 def _check_reference_vars_match_initialized(init, ref):
@@ -151,7 +170,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         _check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        _check_reference_dimensions(self.initialized, xobj)
+        _check_control_dimensions(self.initialized, xobj)
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.control = xobj
 

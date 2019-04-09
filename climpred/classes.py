@@ -2,13 +2,12 @@ import xarray as xr
 from .prediction import (compute_reference, compute_persistence,
                          compute_perfect_model, compute_persistence_pm)
 from .bootstrap import bootstrap_perfect_model
+# Both:
 # TODO: add horizon functionality
-# TODO: add relative entropy functionality
 # TODO: add various `get` and `set` decorators
 # TODO: add checks for our package naming conventions. I.e., should
 # have 'member', 'initialization', etc. Can do this after updating the
 # terminology.
-# TODO: make sure that comparison 'm2r' works for reference ensemble.
 # TODO: allow user to only compute things for one variable. I.e., if the
 # PredictionEnsemble has multiple variables, maybe you only want to compute
 # for one.
@@ -20,8 +19,13 @@ from .bootstrap import bootstrap_perfect_model
 # TODO: Add attributes to returned objects. E.g., 'skill' should come back
 # with attribute explaining what two things were compared.
 # TODO: Create custom errors (not just ValueError for all of this)
-# TODO: Add ensemble capabilities for uninitialized, initialized for
-# reference ensemble.
+
+# PerfectModel:
+# TODO: add relative entropy functionality
+
+# Reference
+# TODO: make sure that comparison 'm2r' works (i.e., allow for the ensemble
+# members to be on DPLE and not just the mean)
 
 
 # --------------
@@ -208,6 +212,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def bootstrap(self, metric='rmse', comparison='m2m', reference_period='MK',
                   sig=95, bootstrap=30):
+        """
+        NOTE: This was written for an old bootstrap function. Needs to be
+        updated with the newer one.
+        """
         if len(self.control) == 0:
             raise ValueError("""You need to add a control dataset before
             attempting to bootstrap.""")
